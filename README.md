@@ -1,1 +1,3 @@
 # scadar
+
+Personal finance app
