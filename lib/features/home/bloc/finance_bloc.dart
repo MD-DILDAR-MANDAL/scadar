@@ -1,17 +1,50 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:scadar/core/cache/models/expense_model.dart';
 import 'package:scadar/core/repository/finance_repository.dart';
 import 'package:scadar/features/home/bloc/finance_event.dart';
 import 'package:scadar/features/home/bloc/finance_state.dart';
+import 'package:scadar/features/home/bloc/currency_cubit.dart';
 
 class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
   final FinanceRepository _financeRepository;
+  final CurrencyCubit _currencyCubit;
+  late final StreamSubscription<CurrencyState> _currencySubscription;
 
-  FinanceBloc({required FinanceRepository financeRepository})
-      : _financeRepository = financeRepository,
+  FinanceBloc({
+    required FinanceRepository financeRepository,
+    required CurrencyCubit currencyCubit,
+  })  : _financeRepository = financeRepository,
+        _currencyCubit = currencyCubit,
         super(FinanceInitial()) {
     on<LoadFinanceData>(_onLoadFinanceData);
     on<AddIncomeEvent>(_onAddIncome);
+    on<UpdateIncomeEvent>(_onUpdateIncome);
+    on<DeleteIncomeEvent>(_onDeleteIncome);
     on<AddExpenseEvent>(_onAddExpense);
+    on<UpdateExpenseEvent>(_onUpdateExpense);
+    on<DeleteExpenseEvent>(_onDeleteExpense);
+
+    _currencySubscription = _currencyCubit.stream.listen((state) {
+      if (state is CurrencyLoaded) {
+        final now = DateTime.now();
+        add(LoadFinanceData(month: now.month, year: now.year));
+      }
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _currencySubscription.cancel();
+    return super.close();
+  }
+
+  double _convertAmount(double amount, String fromCurrency, String globalCurrency, Map<String, double> rates) {
+    if (fromCurrency == globalCurrency) return amount;
+    if (rates.containsKey(fromCurrency)) {
+      return amount / rates[fromCurrency]!;
+    }
+    return amount; // Fallback
   }
 
   Future<void> _onLoadFinanceData(
@@ -22,33 +55,58 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
     try {
       final incomes = await _financeRepository.getIncomesForMonth(event.month, event.year);
       final expenses = await _financeRepository.getExpensesForMonth(event.month, event.year);
+      
+      // Fetch all expenses for the current year to build the monthly graph
+      final allExpenses = await _financeRepository.getAllExpenses();
+      final yearExpenses = allExpenses.where((e) => e.date.year == event.year).toList();
+
+      String globalCurrency = 'USD';
+      Map<String, double> rates = {};
+
+      if (_currencyCubit.state is CurrencyLoaded) {
+        final currencyState = _currencyCubit.state as CurrencyLoaded;
+        globalCurrency = currencyState.globalCurrency;
+        rates = currencyState.ratesMap;
+      }
+
+      final monthlyExpenses = <int, double>{};
+      final yearlyCategoryExpenses = <ExpenseCategory, Map<int, double>>{};
+      
+      for (int i = 1; i <= 12; i++) {
+        monthlyExpenses[i] = 0.0;
+        for (var cat in ExpenseCategory.values) {
+          yearlyCategoryExpenses.putIfAbsent(cat, () => {})[i] = 0.0;
+        }
+      }
+      for (var exp in yearExpenses) {
+        final month = exp.date.month;
+        final converted = _convertAmount(exp.amount, exp.currency, globalCurrency, rates);
+        monthlyExpenses[month] = (monthlyExpenses[month] ?? 0) + converted;
+        yearlyCategoryExpenses[exp.category]![month] = (yearlyCategoryExpenses[exp.category]![month] ?? 0) + converted;
+      }
 
       double totalIncome = 0;
       for (var inc in incomes) {
-        totalIncome += inc.amount;
+        totalIncome += _convertAmount(inc.amount, inc.currency, globalCurrency, rates);
       }
 
       double totalExpense = 0;
       for (var exp in expenses) {
-        totalExpense += exp.amount;
+        totalExpense += _convertAmount(exp.amount, exp.currency, globalCurrency, rates);
       }
 
       final totalBalance = totalIncome - totalExpense;
 
-      String baseCurrency = 'USD';
-      if (incomes.isNotEmpty) {
-        baseCurrency = incomes.first.currency;
-      } else if (expenses.isNotEmpty) {
-        baseCurrency = expenses.first.currency;
-      }
-
       emit(FinanceLoaded(
         incomes: incomes,
         expenses: expenses,
+        allExpenses: allExpenses,
+        monthlyExpenses: monthlyExpenses,
+        yearlyCategoryExpenses: yearlyCategoryExpenses,
         totalBalance: totalBalance,
         totalIncome: totalIncome,
         totalExpense: totalExpense,
-        baseCurrency: baseCurrency,
+        baseCurrency: globalCurrency,
       ));
     } catch (e) {
       emit(FinanceError(e.toString()));
@@ -67,6 +125,30 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
     }
   }
 
+  Future<void> _onUpdateIncome(
+    UpdateIncomeEvent event,
+    Emitter<FinanceState> emit,
+  ) async {
+    try {
+      await _financeRepository.saveIncome(event.income);
+      add(LoadFinanceData(month: event.income.month, year: event.income.year));
+    } catch (e) {
+      emit(FinanceError('Failed to update income: $e'));
+    }
+  }
+
+  Future<void> _onDeleteIncome(
+    DeleteIncomeEvent event,
+    Emitter<FinanceState> emit,
+  ) async {
+    try {
+      await _financeRepository.deleteIncome(event.income.id);
+      add(LoadFinanceData(month: event.income.month, year: event.income.year));
+    } catch (e) {
+      emit(FinanceError('Failed to delete income: $e'));
+    }
+  }
+
   Future<void> _onAddExpense(
     AddExpenseEvent event,
     Emitter<FinanceState> emit,
@@ -76,6 +158,30 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
       add(LoadFinanceData(month: event.expense.date.month, year: event.expense.date.year));
     } catch (e) {
       emit(FinanceError('Failed to add expense: $e'));
+    }
+  }
+
+  Future<void> _onUpdateExpense(
+    UpdateExpenseEvent event,
+    Emitter<FinanceState> emit,
+  ) async {
+    try {
+      await _financeRepository.saveExpense(event.expense);
+      add(LoadFinanceData(month: event.expense.date.month, year: event.expense.date.year));
+    } catch (e) {
+      emit(FinanceError('Failed to update expense: $e'));
+    }
+  }
+
+  Future<void> _onDeleteExpense(
+    DeleteExpenseEvent event,
+    Emitter<FinanceState> emit,
+  ) async {
+    try {
+      await _financeRepository.deleteExpense(event.expense.id);
+      add(LoadFinanceData(month: event.expense.date.month, year: event.expense.date.year));
+    } catch (e) {
+      emit(FinanceError('Failed to delete expense: $e'));
     }
   }
 }

@@ -7,6 +7,7 @@ import 'package:scadar/core/cache/models/income_model.dart';
 import 'package:scadar/core/constant/app_colors.dart';
 import 'package:scadar/core/presentation/widgets/custom_card.dart';
 import 'package:scadar/core/presentation/widgets/section_title.dart';
+import 'package:scadar/features/home/bloc/currency_cubit.dart';
 import 'package:scadar/features/home/bloc/finance_bloc.dart';
 import 'package:scadar/features/home/bloc/finance_state.dart';
 
@@ -21,6 +22,52 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Scadar Dashboard',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          BlocBuilder<CurrencyCubit, CurrencyState>(
+            builder: (context, currencyState) {
+              if (currencyState is CurrencyLoaded) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: DropdownButton<String>(
+                    value: currencyState.globalCurrency,
+                    dropdownColor: AppColors.primary,
+                    style: const TextStyle(
+                      color: AppColors.tertiary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    icon: const Icon(
+                      Icons.arrow_drop_down,
+                      color: AppColors.tertiary,
+                    ),
+                    underline: const SizedBox(),
+                    items: currencyState.availableCurrencies.map((
+                      String value,
+                    ) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        context.read<CurrencyCubit>().setGlobalCurrency(
+                          newValue,
+                        );
+                      }
+                    },
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
+      ),
       body: BlocBuilder<FinanceBloc, FinanceState>(
         builder: (context, state) {
           if (state is FinanceLoading) {
@@ -67,38 +114,28 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Card 2: Expenses Chart
+          // Card: Monthly Expenses Chart (Yearly overview)
           CustomCard(
             height: 250,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionTitle('Total Expenses'),
-                const SizedBox(height: 4),
-                Text(
-                  '${state.totalExpense.toStringAsFixed(2)} ${state.baseCurrency}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.error,
-                  ),
-                ),
+                const SectionTitle('Monthly Expenses (Yearly)'),
                 const SizedBox(height: 16),
                 Expanded(
-                  child: state.expenses.isEmpty
+                  child: state.monthlyExpenses.isEmpty
                       ? const Center(
                           child: Text(
                             'No expenses',
                             style: TextStyle(color: AppColors.primary),
                           ),
                         )
-                      : _buildExpensesBarChart(state.expenses),
+                      : _buildMonthlyExpensesLineChart(state.monthlyExpenses),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
-
           // Card 3: Expenses per categories Pie Chart
           CustomCard(
             height: 250,
@@ -115,7 +152,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: TextStyle(color: AppColors.primary),
                           ),
                         )
-                      : _buildExpensesPieChart(state.expenses),
+                      : _buildExpensesMultilineChart(
+                          state.yearlyCategoryExpenses,
+                        ),
                 ),
               ],
             ),
@@ -225,99 +264,219 @@ class _HomeScreenState extends State<HomeScreen> {
     return list;
   }
 
-  Widget _buildExpensesBarChart(List<ExpenseModel> expenses) {
-    // Group by day for the current month
-    final Map<int, double> dailyExpenses = {};
-    for (var exp in expenses) {
-      final day = exp.date.day;
-      dailyExpenses[day] = (dailyExpenses[day] ?? 0) + exp.amount;
-    }
+  Widget _buildExpensesMultilineChart(
+    Map<ExpenseCategory, Map<int, double>> yearlyCategoryExpenses,
+  ) {
+    final List<LineChartBarData> lineBarsData = [];
+    final List<Color> colors = AppColors.chartColors;
 
-    final List<BarChartGroupData> barGroups = [];
-    dailyExpenses.forEach((day, amount) {
-      barGroups.add(
-        BarChartGroupData(
-          x: day,
-          barRods: [
-            BarChartRodData(
-              toY: amount,
-              color: AppColors.primary,
-              width: 12,
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ],
+    final double maxX = 12;
+    double maxY = 1;
+
+    int i = 0;
+    yearlyCategoryExpenses.forEach((category, monthlyData) {
+      final List<FlSpot> spots = [];
+      for (int month = 1; month <= 12; month++) {
+        final amount = monthlyData[month] ?? 0.0;
+        spots.add(FlSpot(month.toDouble(), amount));
+        if (amount > maxY) maxY = amount;
+      }
+
+      lineBarsData.add(
+        LineChartBarData(
+          spots: spots,
+          isCurved: true,
+          preventCurveOverShooting: true,
+          color: colors[i % colors.length],
+          barWidth: 2,
+          isStrokeCapRound: true,
+          dotData: const FlDotData(show: false),
+          belowBarData: BarAreaData(show: false),
         ),
       );
+      i++;
     });
 
-    if (barGroups.isEmpty) return const SizedBox.shrink();
+    if (lineBarsData.isEmpty) return const SizedBox.shrink();
 
-    return BarChart(
-      BarChartData(
-        alignment: BarChartAlignment.spaceAround,
-        barGroups: barGroups,
+    final monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
+    final chart = LineChart(
+      LineChartData(
+        gridData: const FlGridData(show: false),
         titlesData: FlTitlesData(
-          show: true,
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                return Text(
-                  value.toInt().toString(),
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 10,
-                  ),
-                );
-              },
-            ),
-          ),
-          leftTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
           rightTitles: const AxisTitles(
             sideTitles: SideTitles(showTitles: false),
           ),
           topTitles: const AxisTitles(
             sideTitles: SideTitles(showTitles: false),
           ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 22,
+              interval: 1,
+              getTitlesWidget: (value, meta) {
+                if (value >= 1 && value <= 12) {
+                  return Text(
+                    monthNames[value.toInt() - 1],
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 10,
+                    ),
+                  );
+                }
+                return const Text('');
+              },
+            ),
+          ),
+          leftTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
-        gridData: const FlGridData(show: false),
         borderData: FlBorderData(show: false),
+        minX: 1,
+        maxX: maxX,
+        minY: 0,
+        maxY: maxY + (maxY * 0.2), // 20% headroom
+        lineBarsData: lineBarsData,
       ),
+    );
+
+    return Column(
+      children: [
+        Expanded(child: chart),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
+          children: yearlyCategoryExpenses.keys.toList().asMap().entries.map((entry) {
+            final index = entry.key;
+            final category = entry.value;
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: colors[index % colors.length],
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  category.name.toUpperCase(),
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
-  Widget _buildExpensesPieChart(List<ExpenseModel> expenses) {
-    final Map<ExpenseCategory, double> categoryExpenses = {};
-    for (var exp in expenses) {
-      categoryExpenses[exp.category] =
-          (categoryExpenses[exp.category] ?? 0) + exp.amount;
+  Widget _buildMonthlyExpensesLineChart(Map<int, double> monthlyExpenses) {
+    final List<FlSpot> spots = [];
+    final double maxX = 12;
+    double maxY = 1;
+
+    for (int month = 1; month <= 12; month++) {
+      final amount = monthlyExpenses[month] ?? 0.0;
+      spots.add(FlSpot(month.toDouble(), amount));
+      if (amount > maxY) maxY = amount;
     }
 
-    final List<PieChartSectionData> sections = [];
-    final List<Color> colors = AppColors.chartColors;
+    if (spots.isEmpty) return const SizedBox.shrink();
 
-    int i = 0;
-    categoryExpenses.forEach((category, amount) {
-      sections.add(
-        PieChartSectionData(
-          color: colors[i % colors.length],
-          value: amount,
-          title: '${category.name}\n${amount.toStringAsFixed(0)}',
-          radius: 60,
-          titleStyle: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            color: AppColors.white,
+    final monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
+    return LineChart(
+      LineChartData(
+        gridData: const FlGridData(show: false),
+        titlesData: FlTitlesData(
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 22,
+              interval: 1,
+              getTitlesWidget: (value, meta) {
+                if (value >= 1 && value <= 12) {
+                  return Text(
+                    monthNames[value.toInt() - 1],
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 10,
+                    ),
+                  );
+                }
+                return const Text('');
+              },
+            ),
+          ),
+          leftTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
           ),
         ),
-      );
-      i++;
-    });
-
-    return PieChart(
-      PieChartData(sections: sections, centerSpaceRadius: 30, sectionsSpace: 2),
+        borderData: FlBorderData(show: false),
+        minX: 1,
+        maxX: maxX,
+        minY: 0,
+        maxY: maxY + (maxY * 0.2), // 20% headroom
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            preventCurveOverShooting: true,
+            color: AppColors.primary,
+            barWidth: 3,
+            isStrokeCapRound: true,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: AppColors.primary.withValues(alpha: 0.3),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

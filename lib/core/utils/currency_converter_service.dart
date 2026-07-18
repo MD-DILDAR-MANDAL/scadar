@@ -43,4 +43,20 @@ class CurrencyConverterService {
       return ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'CAD', 'AUD']; // Fallback
     }
   }
+
+  Future<Map<String, double>> fetchRatesForBase(String baseCurrency) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>('/latest', queryParameters: {
+        'from': baseCurrency,
+      });
+
+      if (response.statusCode == 200 && response.data != null) {
+        final rates = response.data!['rates'] as Map<String, dynamic>;
+        return rates.map((key, value) => MapEntry(key, (value as num).toDouble()));
+      }
+      throw Exception('Failed to fetch rates');
+    } catch (e) {
+      throw Exception('Error fetching rates for base $baseCurrency: $e');
+    }
+  }
 }

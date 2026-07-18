@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:scadar/core/constant/app_colors.dart';
-import 'package:scadar/navigate.dart';
-
+import 'package:scadar/core/di/injection_container.dart';
 import 'package:scadar/features/home/bloc/currency_cubit.dart';
 import 'package:scadar/features/home/bloc/finance_bloc.dart';
 import 'package:scadar/features/home/bloc/finance_event.dart';
-import 'package:scadar/core/di/injection_container.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:scadar/navigate.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -16,10 +15,16 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) => sl<FinanceBloc>()..add(LoadFinanceData(month: DateTime.now().month, year: DateTime.now().year)),
+          create: (context) => sl<CurrencyCubit>()..initGlobalCurrency(),
         ),
         BlocProvider(
-          create: (context) => sl<CurrencyCubit>(),
+          create: (context) => sl<FinanceBloc>()
+            ..add(
+              LoadFinanceData(
+                month: DateTime.now().month,
+                year: DateTime.now().year,
+              ),
+            ),
         ),
       ],
       child: MaterialApp(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:scadar/core/di/injection_container.dart' as di;
 
 import 'my_app.dart';
-import 'package:scadar/core/di/injection_container.dart' as di;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

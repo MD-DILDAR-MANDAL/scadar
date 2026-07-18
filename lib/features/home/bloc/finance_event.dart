@@ -28,10 +28,46 @@ class AddIncomeEvent extends FinanceEvent {
   List<Object?> get props => [income];
 }
 
+class UpdateIncomeEvent extends FinanceEvent {
+  final IncomeModel income;
+  
+  const UpdateIncomeEvent(this.income);
+  
+  @override
+  List<Object?> get props => [income];
+}
+
+class DeleteIncomeEvent extends FinanceEvent {
+  final IncomeModel income;
+  
+  const DeleteIncomeEvent(this.income);
+  
+  @override
+  List<Object?> get props => [income];
+}
+
 class AddExpenseEvent extends FinanceEvent {
   final ExpenseModel expense;
   
   const AddExpenseEvent(this.expense);
+  
+  @override
+  List<Object?> get props => [expense];
+}
+
+class UpdateExpenseEvent extends FinanceEvent {
+  final ExpenseModel expense;
+  
+  const UpdateExpenseEvent(this.expense);
+  
+  @override
+  List<Object?> get props => [expense];
+}
+
+class DeleteExpenseEvent extends FinanceEvent {
+  final ExpenseModel expense;
+  
+  const DeleteExpenseEvent(this.expense);
   
   @override
   List<Object?> get props => [expense];

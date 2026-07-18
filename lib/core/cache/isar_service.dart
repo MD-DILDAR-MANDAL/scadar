@@ -2,6 +2,7 @@ import 'package:isar_community/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:scadar/core/cache/models/expense_model.dart';
 import 'package:scadar/core/cache/models/income_model.dart';
+import 'package:scadar/core/cache/models/exchange_rate_cache_model.dart';
 
 class IsarService {
   late Future<Isar> db;
@@ -14,7 +15,7 @@ class IsarService {
     if (Isar.instanceNames.isEmpty) {
       final dir = await getApplicationDocumentsDirectory();
       return await Isar.open(
-        [IncomeModelSchema, ExpenseModelSchema],
+        [IncomeModelSchema, ExpenseModelSchema, ExchangeRateCacheModelSchema],
         directory: dir.path,
       );
     }
@@ -24,6 +25,11 @@ class IsarService {
   Future<void> saveIncome(IncomeModel income) async {
     final isar = await db;
     isar.writeTxnSync<int>(() => isar.incomeModels.putSync(income));
+  }
+
+  Future<void> deleteIncome(int id) async {
+    final isar = await db;
+    isar.writeTxnSync<bool>(() => isar.incomeModels.deleteSync(id));
   }
 
   Future<List<IncomeModel>> getIncomesForMonth(int month, int year) async {
@@ -39,6 +45,11 @@ class IsarService {
   Future<void> saveExpense(ExpenseModel expense) async {
     final isar = await db;
     isar.writeTxnSync<int>(() => isar.expenseModels.putSync(expense));
+  }
+
+  Future<void> deleteExpense(int id) async {
+    final isar = await db;
+    isar.writeTxnSync<bool>(() => isar.expenseModels.deleteSync(id));
   }
 
   Future<List<ExpenseModel>> getExpensesForMonth(int month, int year) async {
@@ -60,5 +71,18 @@ class IsarService {
   Future<List<IncomeModel>> getAllIncomes() async {
     final isar = await db;
     return await isar.incomeModels.where().findAll();
+  }
+
+  Future<ExchangeRateCacheModel?> getExchangeRateCache(String baseCurrency) async {
+    final isar = await db;
+    return await isar.exchangeRateCacheModels
+        .filter()
+        .baseCurrencyEqualTo(baseCurrency)
+        .findFirst();
+  }
+
+  Future<void> saveExchangeRateCache(ExchangeRateCacheModel cache) async {
+    final isar = await db;
+    isar.writeTxnSync<int>(() => isar.exchangeRateCacheModels.putSync(cache));
   }
 }
