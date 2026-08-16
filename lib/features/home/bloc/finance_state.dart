@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:scadar/core/cache/models/expense_model.dart';
 import 'package:scadar/core/cache/models/income_model.dart';
+import 'package:scadar/core/cache/models/budget_model.dart';
+import 'package:scadar/core/cache/models/recurring_transaction_model.dart';
 
 abstract class FinanceState extends Equatable {
   const FinanceState();
@@ -17,6 +19,8 @@ class FinanceLoaded extends FinanceState {
   final List<IncomeModel> incomes;
   final List<ExpenseModel> expenses;
   final List<ExpenseModel> allExpenses;
+  final List<BudgetModel> budgets;
+  final List<RecurringTransactionModel> subscriptions;
   final Map<int, double> monthlyExpenses;
   final Map<ExpenseCategory, Map<int, double>> yearlyCategoryExpenses;
   final double totalBalance;
@@ -28,6 +32,8 @@ class FinanceLoaded extends FinanceState {
     required this.incomes,
     required this.expenses,
     required this.allExpenses,
+    required this.budgets,
+    required this.subscriptions,
     required this.monthlyExpenses,
     required this.yearlyCategoryExpenses,
     required this.totalBalance,
@@ -41,6 +47,8 @@ class FinanceLoaded extends FinanceState {
         incomes,
         expenses,
         allExpenses,
+        budgets,
+        subscriptions,
         monthlyExpenses,
         yearlyCategoryExpenses,
         totalBalance,

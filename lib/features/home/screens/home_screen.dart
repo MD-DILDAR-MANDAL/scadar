@@ -10,6 +10,7 @@ import 'package:scadar/core/presentation/widgets/section_title.dart';
 import 'package:scadar/features/home/bloc/currency_cubit.dart';
 import 'package:scadar/features/home/bloc/finance_bloc.dart';
 import 'package:scadar/features/home/bloc/finance_state.dart';
+import 'package:scadar/features/subscriptions/screens/subscriptions_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,6 +29,15 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.autorenew, color: AppColors.primary),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute<void>(builder: (_) => const SubscriptionsScreen()),
+              );
+            },
+          ),
           BlocBuilder<CurrencyCubit, CurrencyState>(
             builder: (context, currencyState) {
               if (currencyState is CurrencyLoaded) {

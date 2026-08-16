@@ -3,6 +3,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:scadar/core/cache/models/expense_model.dart';
 import 'package:scadar/core/cache/models/income_model.dart';
 import 'package:scadar/core/cache/models/exchange_rate_cache_model.dart';
+import 'package:scadar/core/cache/models/budget_model.dart';
+import 'package:scadar/core/cache/models/recurring_transaction_model.dart';
 
 class IsarService {
   late Future<Isar> db;
@@ -15,7 +17,7 @@ class IsarService {
     if (Isar.instanceNames.isEmpty) {
       final dir = await getApplicationDocumentsDirectory();
       return await Isar.open(
-        [IncomeModelSchema, ExpenseModelSchema, ExchangeRateCacheModelSchema],
+        [IncomeModelSchema, ExpenseModelSchema, ExchangeRateCacheModelSchema, BudgetModelSchema, RecurringTransactionModelSchema],
         directory: dir.path,
       );
     }
@@ -84,5 +86,40 @@ class IsarService {
   Future<void> saveExchangeRateCache(ExchangeRateCacheModel cache) async {
     final isar = await db;
     isar.writeTxnSync<int>(() => isar.exchangeRateCacheModels.putSync(cache));
+  }
+
+  Future<void> saveBudget(BudgetModel budget) async {
+    final isar = await db;
+    isar.writeTxnSync<int>(() => isar.budgetModels.putSync(budget));
+  }
+
+  Future<void> deleteBudget(int id) async {
+    final isar = await db;
+    isar.writeTxnSync<bool>(() => isar.budgetModels.deleteSync(id));
+  }
+
+  Future<List<BudgetModel>> getBudgetsForMonth(int month, int year) async {
+    final isar = await db;
+    return await isar.budgetModels
+        .filter()
+        .monthEqualTo(month)
+        .and()
+        .yearEqualTo(year)
+        .findAll();
+  }
+
+  Future<void> saveRecurringTransaction(RecurringTransactionModel model) async {
+    final isar = await db;
+    isar.writeTxnSync<int>(() => isar.recurringTransactionModels.putSync(model));
+  }
+
+  Future<void> deleteRecurringTransaction(int id) async {
+    final isar = await db;
+    isar.writeTxnSync<bool>(() => isar.recurringTransactionModels.deleteSync(id));
+  }
+
+  Future<List<RecurringTransactionModel>> getAllRecurringTransactions() async {
+    final isar = await db;
+    return await isar.recurringTransactionModels.where().findAll();
   }
 }

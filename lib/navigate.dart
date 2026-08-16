@@ -4,6 +4,7 @@ import 'package:scadar/features/analytics/screens/analytics_screen.dart';
 import 'package:scadar/features/expense/screens/expense_screen.dart';
 import 'package:scadar/features/home/screens/home_screen.dart';
 import 'package:scadar/features/income/screens/income_screen.dart';
+import 'package:scadar/features/subscriptions/screens/subscriptions_screen.dart';
 
 class Navigate extends StatefulWidget {
   const Navigate({super.key});
@@ -20,6 +21,7 @@ class _NavigateState extends State<Navigate> {
     const ExpenseScreen(),
     const IncomeScreen(),
     const AnalyticsScreen(),
+    const SubscriptionsScreen(),
   ];
 
   @override
@@ -61,6 +63,12 @@ class _NavigateState extends State<Navigate> {
                 icon: Icon(Icons.analytics_outlined, size: 30),
                 label: "Analytics",
                 activeIcon: BuildActiveIcon(iconData: Icons.analytics),
+                backgroundColor: AppColors.tertiary,
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.autorenew_outlined, size: 30),
+                label: "Subs",
+                activeIcon: BuildActiveIcon(iconData: Icons.autorenew),
                 backgroundColor: AppColors.tertiary,
               ),
             ],

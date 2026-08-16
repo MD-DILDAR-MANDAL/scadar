@@ -15,6 +15,7 @@ import 'package:scadar/features/home/bloc/currency_cubit.dart';
 import 'package:scadar/features/home/bloc/finance_bloc.dart';
 import 'package:scadar/features/home/bloc/finance_event.dart';
 import 'package:scadar/features/home/bloc/finance_state.dart';
+import 'package:scadar/features/analytics/widgets/add_budget_dialog.dart';
 import 'package:screenshot/screenshot.dart';
 
 enum AnalyticsTimeframe { day, month }
@@ -210,6 +211,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 24),
+                  _buildBudgetsCard(state),
                 ],
               ),
             ),
@@ -502,7 +505,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       }
 
       final List<FlSpot> spots = [];
-      double maxX = 6;
+      final double maxX = 6;
       double maxY = 1;
 
       for (int i = 0; i <= 6; i++) {
@@ -672,6 +675,110 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildBudgetsCard(FinanceLoaded state) {
+    return CustomCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const SectionTitle('Monthly Budgets'),
+              IconButton(
+                icon: const Icon(Icons.add_circle, color: AppColors.primary),
+                onPressed: () {
+                  showDialog<void>(
+                    context: context,
+                    builder: (context) => AddBudgetDialog(selectedDate: _selectedDate),
+                  );
+                },
+              ),
+            ],
+          ),
+          if (state.budgets.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text(
+                  'No budgets set for this month',
+                  style: TextStyle(color: AppColors.primary),
+                ),
+              ),
+            )
+          else
+            ...state.budgets.map((budget) {
+              double spent = 0;
+              if (budget.category == null) {
+                // Overall budget
+                for (var cat in state.yearlyCategoryExpenses.keys) {
+                  spent += state.yearlyCategoryExpenses[cat]![_selectedDate.month] ?? 0;
+                }
+              } else {
+                // Category budget
+                spent = state.yearlyCategoryExpenses[budget.category]![_selectedDate.month] ?? 0;
+              }
+              
+              final percent = (budget.limit > 0) ? (spent / budget.limit) : 0.0;
+              final progress = percent.clamp(0.0, 1.0);
+              final isOverBudget = spent > budget.limit;
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          budget.category?.name.toUpperCase() ?? 'OVERALL',
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.dark),
+                        ),
+                        Row(
+                          children: [
+                            Text(
+                              '${spent.toStringAsFixed(0)} ${state.baseCurrency} / ${budget.limit.toStringAsFixed(0)} ${state.baseCurrency}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isOverBudget ? Colors.red : AppColors.dark,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            InkWell(
+                              onTap: () {
+                                context.read<FinanceBloc>().add(DeleteBudgetEvent(budget));
+                              },
+                              child: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(
+                      value: progress,
+                      backgroundColor: AppColors.grey.withValues(alpha: 0.2),
+                      color: isOverBudget ? Colors.red : AppColors.primary,
+                      minHeight: 8,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    if (isOverBudget)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 4.0),
+                        child: Text(
+                          'Over budget!',
+                          style: TextStyle(color: Colors.red, fontSize: 10),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            }),
+        ],
+      ),
     );
   }
 }

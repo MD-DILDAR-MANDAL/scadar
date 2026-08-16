@@ -24,6 +24,11 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
     on<AddExpenseEvent>(_onAddExpense);
     on<UpdateExpenseEvent>(_onUpdateExpense);
     on<DeleteExpenseEvent>(_onDeleteExpense);
+    on<AddBudgetEvent>(_onAddBudget);
+    on<DeleteBudgetEvent>(_onDeleteBudget);
+    on<AddSubscriptionEvent>(_onAddSubscription);
+    on<UpdateSubscriptionEvent>(_onUpdateSubscription);
+    on<DeleteSubscriptionEvent>(_onDeleteSubscription);
 
     _currencySubscription = _currencyCubit.stream.listen((state) {
       if (state is CurrencyLoaded) {
@@ -53,8 +58,12 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
   ) async {
     emit(FinanceLoading());
     try {
+      await _financeRepository.processRecurringTransactions();
+
       final incomes = await _financeRepository.getIncomesForMonth(event.month, event.year);
       final expenses = await _financeRepository.getExpensesForMonth(event.month, event.year);
+      final budgets = await _financeRepository.getBudgetsForMonth(event.month, event.year);
+      final subscriptions = await _financeRepository.getAllRecurringTransactions();
       
       // Fetch all expenses for the current year to build the monthly graph
       final allExpenses = await _financeRepository.getAllExpenses();
@@ -101,6 +110,8 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
         incomes: incomes,
         expenses: expenses,
         allExpenses: allExpenses,
+        budgets: budgets,
+        subscriptions: subscriptions,
         monthlyExpenses: monthlyExpenses,
         yearlyCategoryExpenses: yearlyCategoryExpenses,
         totalBalance: totalBalance,
@@ -182,6 +193,77 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
       add(LoadFinanceData(month: event.expense.date.month, year: event.expense.date.year));
     } catch (e) {
       emit(FinanceError('Failed to delete expense: $e'));
+    }
+  }
+
+  Future<void> _onAddBudget(
+    AddBudgetEvent event,
+    Emitter<FinanceState> emit,
+  ) async {
+    try {
+      // Handle overwrite: delete any existing budget for the same category/month
+      if (state is FinanceLoaded) {
+        final loadedState = state as FinanceLoaded;
+        final existing = loadedState.budgets.where((b) => b.category == event.budget.category);
+        for (var b in existing) {
+          await _financeRepository.deleteBudget(b.id);
+        }
+      }
+      await _financeRepository.saveBudget(event.budget);
+      add(LoadFinanceData(month: event.budget.month, year: event.budget.year));
+    } catch (e) {
+      emit(FinanceError('Failed to add budget: $e'));
+    }
+  }
+
+  Future<void> _onDeleteBudget(
+    DeleteBudgetEvent event,
+    Emitter<FinanceState> emit,
+  ) async {
+    try {
+      await _financeRepository.deleteBudget(event.budget.id);
+      add(LoadFinanceData(month: event.budget.month, year: event.budget.year));
+    } catch (e) {
+      emit(FinanceError('Failed to delete budget: $e'));
+    }
+  }
+
+  Future<void> _onAddSubscription(
+    AddSubscriptionEvent event,
+    Emitter<FinanceState> emit,
+  ) async {
+    try {
+      await _financeRepository.saveRecurringTransaction(event.subscription);
+      final now = DateTime.now();
+      add(LoadFinanceData(month: now.month, year: now.year));
+    } catch (e) {
+      emit(FinanceError('Failed to add subscription: $e'));
+    }
+  }
+
+  Future<void> _onUpdateSubscription(
+    UpdateSubscriptionEvent event,
+    Emitter<FinanceState> emit,
+  ) async {
+    try {
+      await _financeRepository.saveRecurringTransaction(event.subscription);
+      final now = DateTime.now();
+      add(LoadFinanceData(month: now.month, year: now.year));
+    } catch (e) {
+      emit(FinanceError('Failed to update subscription: $e'));
+    }
+  }
+
+  Future<void> _onDeleteSubscription(
+    DeleteSubscriptionEvent event,
+    Emitter<FinanceState> emit,
+  ) async {
+    try {
+      await _financeRepository.deleteRecurringTransaction(event.subscription.id);
+      final now = DateTime.now();
+      add(LoadFinanceData(month: now.month, year: now.year));
+    } catch (e) {
+      emit(FinanceError('Failed to delete subscription: $e'));
     }
   }
 }
