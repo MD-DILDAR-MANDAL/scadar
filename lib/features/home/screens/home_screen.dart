@@ -10,6 +10,7 @@ import 'package:scadar/core/presentation/widgets/section_title.dart';
 import 'package:scadar/features/home/bloc/currency_cubit.dart';
 import 'package:scadar/features/home/bloc/finance_bloc.dart';
 import 'package:scadar/features/home/bloc/finance_state.dart';
+import 'package:scadar/features/backup/screens/backup_screen.dart';
 import 'package:scadar/features/subscriptions/screens/subscriptions_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -30,11 +31,24 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.autorenew, color: AppColors.primary),
+            icon: const Icon(Icons.cloud_sync_outlined, color: AppColors.white),
+            tooltip: 'Cloud Backup & Sync',
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute<void>(builder: (_) => const SubscriptionsScreen()),
+                MaterialPageRoute<void>(builder: (_) => const BackupScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.autorenew, color: AppColors.white),
+            tooltip: 'Subscriptions',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const SubscriptionsScreen(),
+                ),
               );
             },
           ),
@@ -374,7 +388,9 @@ class _HomeScreenState extends State<HomeScreen> {
           spacing: 12,
           runSpacing: 8,
           alignment: WrapAlignment.center,
-          children: yearlyCategoryExpenses.keys.toList().asMap().entries.map((entry) {
+          children: yearlyCategoryExpenses.keys.toList().asMap().entries.map((
+            entry,
+          ) {
             final index = entry.key;
             final category = entry.value;
             return Row(

@@ -122,4 +122,29 @@ class IsarService {
     final isar = await db;
     return await isar.recurringTransactionModels.where().findAll();
   }
+
+  Future<List<BudgetModel>> getAllBudgets() async {
+    final isar = await db;
+    return await isar.budgetModels.where().findAll();
+  }
+
+  Future<void> clearAndRestoreAllData({
+    required List<ExpenseModel> expenses,
+    required List<IncomeModel> incomes,
+    required List<BudgetModel> budgets,
+    required List<RecurringTransactionModel> recurring,
+  }) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.expenseModels.clear();
+      await isar.incomeModels.clear();
+      await isar.budgetModels.clear();
+      await isar.recurringTransactionModels.clear();
+
+      await isar.expenseModels.putAll(expenses);
+      await isar.incomeModels.putAll(incomes);
+      await isar.budgetModels.putAll(budgets);
+      await isar.recurringTransactionModels.putAll(recurring);
+    });
+  }
 }

@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:scadar/core/constant/app_colors.dart';
 import 'package:scadar/features/analytics/screens/analytics_screen.dart';
+import 'package:scadar/features/backup/bloc/backup_bloc.dart';
+import 'package:scadar/features/backup/bloc/backup_state.dart';
 import 'package:scadar/features/expense/screens/expense_screen.dart';
+import 'package:scadar/features/home/bloc/currency_cubit.dart';
+import 'package:scadar/features/home/bloc/finance_bloc.dart';
+import 'package:scadar/features/home/bloc/finance_event.dart';
 import 'package:scadar/features/home/screens/home_screen.dart';
 import 'package:scadar/features/income/screens/income_screen.dart';
 import 'package:scadar/features/subscriptions/screens/subscriptions_screen.dart';
@@ -26,8 +32,18 @@ class _NavigateState extends State<Navigate> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(child: screens[selectedIndex]),
+    return BlocListener<BackupBloc, BackupState>(
+      listenWhen: (previous, current) =>
+          previous.isRestoring && !current.isRestoring && current.errorMessage == null,
+      listener: (context, state) {
+        final now = DateTime.now();
+        context.read<CurrencyCubit>().initGlobalCurrency();
+        context.read<FinanceBloc>().add(
+              LoadFinanceData(month: now.month, year: now.year),
+            );
+      },
+      child: Scaffold(
+        body: SafeArea(child: screens[selectedIndex]),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(5.0),
         child: Container(
@@ -93,7 +109,7 @@ class _NavigateState extends State<Navigate> {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 
