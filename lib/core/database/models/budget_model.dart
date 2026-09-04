@@ -1,5 +1,5 @@
 import 'package:isar_community/isar.dart';
-import 'package:scadar/core/cache/models/expense_model.dart';
+import 'package:scadar/core/database/models/expense_model.dart';
 
 part 'budget_model.g.dart';
 

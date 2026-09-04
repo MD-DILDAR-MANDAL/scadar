@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:isar_community/isar.dart';
-import 'package:scadar/core/cache/isar_service.dart';
-import 'package:scadar/core/cache/models/exchange_rate_cache_model.dart';
-import 'package:scadar/core/utils/currency_converter_service.dart';
+import 'package:scadar/core/database/isar_service.dart';
+import 'package:scadar/core/database/models/exchange_rate_cache_model.dart';
+import 'package:scadar/core/services/currency_converter_service.dart';
 
 abstract class CurrencyRepository {
   Future<double> convert({

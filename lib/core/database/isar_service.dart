@@ -1,10 +1,10 @@
 import 'package:isar_community/isar.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:scadar/core/cache/models/expense_model.dart';
-import 'package:scadar/core/cache/models/income_model.dart';
-import 'package:scadar/core/cache/models/exchange_rate_cache_model.dart';
-import 'package:scadar/core/cache/models/budget_model.dart';
-import 'package:scadar/core/cache/models/recurring_transaction_model.dart';
+import 'package:scadar/core/database/models/expense_model.dart';
+import 'package:scadar/core/database/models/income_model.dart';
+import 'package:scadar/core/database/models/exchange_rate_cache_model.dart';
+import 'package:scadar/core/database/models/budget_model.dart';
+import 'package:scadar/core/database/models/recurring_transaction_model.dart';
 
 class IsarService {
   late Future<Isar> db;

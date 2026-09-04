@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:scadar/core/cache/models/expense_model.dart';
-import 'package:scadar/core/cache/models/recurring_transaction_model.dart';
-import 'package:scadar/core/constant/app_colors.dart';
-import 'package:scadar/features/home/bloc/currency_cubit.dart';
-import 'package:scadar/features/home/bloc/finance_bloc.dart';
-import 'package:scadar/features/home/bloc/finance_event.dart';
+import 'package:scadar/core/constants/app_colors.dart';
+import 'package:scadar/core/database/models/expense_model.dart';
+import 'package:scadar/core/database/models/recurring_transaction_model.dart';
+import 'package:scadar/features/currency/bloc/currency_bloc.dart';
+import 'package:scadar/features/currency/bloc/currency_state.dart';
+import 'package:scadar/features/finance/bloc/finance_bloc.dart';
+import 'package:scadar/features/finance/bloc/finance_event.dart';
 
 class AddSubscriptionDialog extends StatefulWidget {
   const AddSubscriptionDialog({super.key});
@@ -37,7 +38,7 @@ class _AddSubscriptionDialogState extends State<AddSubscriptionDialog> {
       final amount = double.tryParse(_amountController.text) ?? 0.0;
       if (amount <= 0) return;
 
-      final currencyState = context.read<CurrencyCubit>().state;
+      final currencyState = context.read<CurrencyBloc>().state;
       String currency = 'USD';
       if (currencyState is CurrencyLoaded) {
         currency = currencyState.globalCurrency;

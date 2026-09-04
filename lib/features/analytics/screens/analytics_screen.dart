@@ -7,15 +7,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:scadar/core/cache/models/expense_model.dart';
-import 'package:scadar/core/constant/app_colors.dart';
-import 'package:scadar/core/presentation/widgets/custom_card.dart';
-import 'package:scadar/core/presentation/widgets/section_title.dart';
-import 'package:scadar/features/home/bloc/currency_cubit.dart';
-import 'package:scadar/features/home/bloc/finance_bloc.dart';
-import 'package:scadar/features/home/bloc/finance_event.dart';
-import 'package:scadar/features/home/bloc/finance_state.dart';
+import 'package:scadar/core/constants/app_colors.dart';
+import 'package:scadar/core/database/models/expense_model.dart';
+import 'package:scadar/core/widgets/custom_card.dart';
+import 'package:scadar/core/widgets/section_title.dart';
 import 'package:scadar/features/analytics/widgets/add_budget_dialog.dart';
+import 'package:scadar/features/currency/bloc/currency_bloc.dart';
+import 'package:scadar/features/currency/bloc/currency_state.dart';
+import 'package:scadar/features/finance/bloc/finance_bloc.dart';
+import 'package:scadar/features/finance/bloc/finance_event.dart';
+import 'package:scadar/features/finance/bloc/finance_state.dart';
 import 'package:screenshot/screenshot.dart';
 
 enum AnalyticsTimeframe { day, month }
@@ -366,9 +367,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   double _getConvertedAmount(double amount, String currency) {
-    final currencyCubit = context.read<CurrencyCubit>();
-    if (currencyCubit.state is CurrencyLoaded) {
-      final state = currencyCubit.state as CurrencyLoaded;
+    final currencyBloc = context.read<CurrencyBloc>();
+    if (currencyBloc.state is CurrencyLoaded) {
+      final state = currencyBloc.state as CurrencyLoaded;
       if (currency == state.globalCurrency) return amount;
       if (state.ratesMap.containsKey(currency)) {
         return amount / state.ratesMap[currency]!;

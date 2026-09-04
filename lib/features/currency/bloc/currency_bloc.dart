@@ -1,67 +1,39 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
-import 'package:scadar/core/repository/currency_repository.dart';
-import 'package:scadar/core/repository/settings_repository.dart';
+import 'package:scadar/core/repositories/currency_repository.dart';
+import 'package:scadar/core/repositories/settings_repository.dart';
+import 'package:scadar/features/currency/bloc/currency_event.dart';
+import 'package:scadar/features/currency/bloc/currency_state.dart';
 
-abstract class CurrencyState extends Equatable {
-  const CurrencyState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class CurrencyInitial extends CurrencyState {}
-
-class CurrencyLoading extends CurrencyState {}
-
-class CurrencyLoaded extends CurrencyState {
-  final double convertedAmount;
-  final List<String> availableCurrencies;
-  final String globalCurrency;
-  final Map<String, double> ratesMap;
-  
-  const CurrencyLoaded({
-    required this.convertedAmount, 
-    required this.availableCurrencies,
-    required this.globalCurrency,
-    required this.ratesMap,
-  });
-
-  @override
-  List<Object?> get props => [convertedAmount, availableCurrencies, globalCurrency, ratesMap];
-}
-
-class CurrencyError extends CurrencyState {
-  final String message;
-
-  const CurrencyError(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class CurrencyCubit extends Cubit<CurrencyState> {
+class CurrencyBloc extends Bloc<CurrencyEvent, CurrencyState> {
   final CurrencyRepository _currencyRepository;
   final SettingsRepository _settingsRepository;
-  
+
   List<String> _availableCurrencies = [];
   String _globalCurrency = 'USD';
   Map<String, double> _ratesMap = {};
 
-  CurrencyCubit({
+  CurrencyBloc({
     required CurrencyRepository currencyRepository,
     required SettingsRepository settingsRepository,
   })  : _currencyRepository = currencyRepository,
         _settingsRepository = settingsRepository,
-        super(CurrencyInitial());
+        super(CurrencyInitial()) {
+    on<InitGlobalCurrencyEvent>(_onInitGlobalCurrency);
+    on<SetGlobalCurrencyEvent>(_onSetGlobalCurrency);
+    on<FetchAvailableCurrenciesEvent>(_onFetchAvailableCurrencies);
+    on<ConvertCurrencyEvent>(_onConvertCurrency);
+  }
 
-  Future<void> initGlobalCurrency() async {
+  Future<void> _onInitGlobalCurrency(
+    InitGlobalCurrencyEvent event,
+    Emitter<CurrencyState> emit,
+  ) async {
     emit(CurrencyLoading());
     try {
       _globalCurrency = await _settingsRepository.getGlobalCurrency();
       _availableCurrencies = await _currencyRepository.getAvailableCurrencies();
       _ratesMap = await _currencyRepository.fetchRatesForBase(_globalCurrency);
-      
+
       emit(CurrencyLoaded(
         convertedAmount: 0,
         availableCurrencies: _availableCurrencies,
@@ -73,13 +45,16 @@ class CurrencyCubit extends Cubit<CurrencyState> {
     }
   }
 
-  Future<void> setGlobalCurrency(String currency) async {
+  Future<void> _onSetGlobalCurrency(
+    SetGlobalCurrencyEvent event,
+    Emitter<CurrencyState> emit,
+  ) async {
     emit(CurrencyLoading());
     try {
-      await _settingsRepository.saveGlobalCurrency(currency);
-      _globalCurrency = currency;
+      await _settingsRepository.saveGlobalCurrency(event.currency);
+      _globalCurrency = event.currency;
       _ratesMap = await _currencyRepository.fetchRatesForBase(_globalCurrency);
-      
+
       emit(CurrencyLoaded(
         convertedAmount: 0,
         availableCurrencies: _availableCurrencies,
@@ -91,7 +66,10 @@ class CurrencyCubit extends Cubit<CurrencyState> {
     }
   }
 
-  Future<void> fetchAvailableCurrencies() async {
+  Future<void> _onFetchAvailableCurrencies(
+    FetchAvailableCurrenciesEvent event,
+    Emitter<CurrencyState> emit,
+  ) async {
     try {
       if (_availableCurrencies.isEmpty) {
         _availableCurrencies = await _currencyRepository.getAvailableCurrencies();
@@ -110,21 +88,20 @@ class CurrencyCubit extends Cubit<CurrencyState> {
     }
   }
 
-  Future<void> convert({
-    required double amount,
-    required String fromCurrency,
-    required String toCurrency,
-  }) async {
+  Future<void> _onConvertCurrency(
+    ConvertCurrencyEvent event,
+    Emitter<CurrencyState> emit,
+  ) async {
     emit(CurrencyLoading());
     try {
       if (_availableCurrencies.isEmpty) {
         _availableCurrencies = await _currencyRepository.getAvailableCurrencies();
       }
-      
+
       final result = await _currencyRepository.convert(
-        amount: amount,
-        fromCurrency: fromCurrency,
-        toCurrency: toCurrency,
+        amount: event.amount,
+        fromCurrency: event.fromCurrency,
+        toCurrency: event.toCurrency,
       );
       emit(CurrencyLoaded(
         convertedAmount: result,

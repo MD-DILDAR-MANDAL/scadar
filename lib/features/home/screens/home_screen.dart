@@ -2,15 +2,17 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:scadar/core/cache/models/expense_model.dart';
-import 'package:scadar/core/cache/models/income_model.dart';
-import 'package:scadar/core/constant/app_colors.dart';
-import 'package:scadar/core/presentation/widgets/custom_card.dart';
-import 'package:scadar/core/presentation/widgets/section_title.dart';
-import 'package:scadar/features/home/bloc/currency_cubit.dart';
-import 'package:scadar/features/home/bloc/finance_bloc.dart';
-import 'package:scadar/features/home/bloc/finance_state.dart';
+import 'package:scadar/core/constants/app_colors.dart';
+import 'package:scadar/core/database/models/expense_model.dart';
+import 'package:scadar/core/database/models/income_model.dart';
+import 'package:scadar/core/widgets/custom_card.dart';
+import 'package:scadar/core/widgets/section_title.dart';
 import 'package:scadar/features/backup/screens/backup_screen.dart';
+import 'package:scadar/features/currency/bloc/currency_bloc.dart';
+import 'package:scadar/features/currency/bloc/currency_event.dart';
+import 'package:scadar/features/currency/bloc/currency_state.dart';
+import 'package:scadar/features/finance/bloc/finance_bloc.dart';
+import 'package:scadar/features/finance/bloc/finance_state.dart';
 import 'package:scadar/features/subscriptions/screens/subscriptions_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -52,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          BlocBuilder<CurrencyCubit, CurrencyState>(
+          BlocBuilder<CurrencyBloc, CurrencyState>(
             builder: (context, currencyState) {
               if (currencyState is CurrencyLoaded) {
                 return Padding(
@@ -79,8 +81,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     }).toList(),
                     onChanged: (String? newValue) {
                       if (newValue != null) {
-                        context.read<CurrencyCubit>().setGlobalCurrency(
-                          newValue,
+                        context.read<CurrencyBloc>().add(
+                          SetGlobalCurrencyEvent(newValue),
                         );
                       }
                     },

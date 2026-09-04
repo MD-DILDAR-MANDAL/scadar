@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:scadar/core/constant/app_colors.dart';
-import 'package:scadar/core/presentation/widgets/custom_button.dart';
-import 'package:scadar/core/presentation/widgets/custom_card.dart';
-import 'package:scadar/core/presentation/widgets/section_title.dart';
+import 'package:scadar/core/constants/app_colors.dart';
+import 'package:scadar/core/widgets/custom_button.dart';
+import 'package:scadar/core/widgets/custom_card.dart';
+import 'package:scadar/core/widgets/section_title.dart';
 import 'package:scadar/features/backup/bloc/backup_bloc.dart';
 import 'package:scadar/features/backup/bloc/backup_event.dart';
 import 'package:scadar/features/backup/bloc/backup_state.dart';
-import 'package:scadar/features/home/bloc/currency_cubit.dart';
-import 'package:scadar/features/home/bloc/finance_bloc.dart';
-import 'package:scadar/features/home/bloc/finance_event.dart';
+import 'package:scadar/features/currency/bloc/currency_bloc.dart';
+import 'package:scadar/features/currency/bloc/currency_event.dart';
+import 'package:scadar/features/finance/bloc/finance_bloc.dart';
+import 'package:scadar/features/finance/bloc/finance_event.dart';
 
 class BackupScreen extends StatefulWidget {
   const BackupScreen({super.key});
@@ -53,9 +54,9 @@ class _BackupScreenState extends State<BackupScreen> {
                 backgroundColor: AppColors.success,
               ),
             );
-            // Refresh data in CurrencyCubit and FinanceBloc
+            // Refresh data in CurrencyBloc and FinanceBloc
             final now = DateTime.now();
-            context.read<CurrencyCubit>().initGlobalCurrency();
+            context.read<CurrencyBloc>().add(const InitGlobalCurrencyEvent());
             context.read<FinanceBloc>().add(
                   LoadFinanceData(month: now.month, year: now.year),
                 );

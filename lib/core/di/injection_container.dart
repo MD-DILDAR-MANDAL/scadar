@@ -1,15 +1,15 @@
 import 'package:get_it/get_it.dart';
-import 'package:scadar/core/cache/isar_service.dart';
-import 'package:scadar/core/repository/currency_repository.dart';
-import 'package:scadar/core/repository/finance_repository.dart';
-import 'package:scadar/core/utils/currency_converter_service.dart';
+import 'package:scadar/core/database/isar_service.dart';
+import 'package:scadar/core/repositories/currency_repository.dart';
+import 'package:scadar/core/repositories/finance_repository.dart';
+import 'package:scadar/core/repositories/settings_repository.dart';
 import 'package:scadar/core/services/backup_sync_service.dart';
+import 'package:scadar/core/services/currency_converter_service.dart';
 import 'package:scadar/core/services/google_drive_service.dart';
 import 'package:scadar/features/backup/bloc/backup_bloc.dart';
-import 'package:scadar/features/home/bloc/currency_cubit.dart';
-import 'package:scadar/features/home/bloc/finance_bloc.dart';
+import 'package:scadar/features/currency/bloc/currency_bloc.dart';
+import 'package:scadar/features/finance/bloc/finance_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:scadar/core/repository/settings_repository.dart';
 
 final sl = GetIt.instance;
 
@@ -46,9 +46,9 @@ Future<void> init() async {
   // Blocs
   sl.registerFactory(() => FinanceBloc(
     financeRepository: sl(),
-    currencyCubit: sl(),
+    currencyBloc: sl(),
   ));
-  sl.registerLazySingleton(() => CurrencyCubit(
+  sl.registerLazySingleton(() => CurrencyBloc(
     currencyRepository: sl(),
     settingsRepository: sl(),
   ));

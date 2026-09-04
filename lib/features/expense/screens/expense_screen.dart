@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:scadar/core/cache/models/expense_model.dart';
-import 'package:scadar/core/constant/app_colors.dart';
-import 'package:scadar/core/presentation/widgets/custom_button.dart';
-import 'package:scadar/core/presentation/widgets/custom_dropdown.dart';
-import 'package:scadar/core/presentation/widgets/custom_text_field.dart';
-import 'package:scadar/core/presentation/widgets/custom_card.dart';
-import 'package:scadar/core/presentation/widgets/section_title.dart';
-import 'package:scadar/features/home/bloc/finance_bloc.dart';
-import 'package:scadar/features/home/bloc/finance_event.dart';
-import 'package:scadar/features/home/bloc/finance_state.dart';
-import 'package:scadar/features/home/bloc/currency_cubit.dart';
+import 'package:scadar/core/constants/app_colors.dart';
+import 'package:scadar/core/database/models/expense_model.dart';
+import 'package:scadar/core/widgets/custom_button.dart';
+import 'package:scadar/core/widgets/custom_card.dart';
+import 'package:scadar/core/widgets/custom_dropdown.dart';
+import 'package:scadar/core/widgets/custom_text_field.dart';
+import 'package:scadar/core/widgets/section_title.dart';
+import 'package:scadar/features/currency/bloc/currency_bloc.dart';
+import 'package:scadar/features/currency/bloc/currency_state.dart';
+import 'package:scadar/features/finance/bloc/finance_bloc.dart';
+import 'package:scadar/features/finance/bloc/finance_event.dart';
+import 'package:scadar/features/finance/bloc/finance_state.dart';
 
 class ExpenseScreen extends StatefulWidget {
   const ExpenseScreen({super.key});
@@ -30,7 +31,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_isInit) {
-      final currencyState = context.read<CurrencyCubit>().state;
+      final currencyState = context.read<CurrencyBloc>().state;
       if (currencyState is CurrencyLoaded) {
         _currency = currencyState.globalCurrency;
         _isInit = true;
@@ -67,7 +68,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<CurrencyCubit, CurrencyState>(
+    return BlocListener<CurrencyBloc, CurrencyState>(
       listener: (context, state) {
         if (state is CurrencyLoaded && !_isInit) {
           setState(() {
@@ -176,9 +177,9 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
 
   double _getConvertedAmount(double amount, String currency) {
-    final currencyCubit = context.read<CurrencyCubit>();
-    if (currencyCubit.state is CurrencyLoaded) {
-      final state = currencyCubit.state as CurrencyLoaded;
+    final currencyBloc = context.read<CurrencyBloc>();
+    if (currencyBloc.state is CurrencyLoaded) {
+      final state = currencyBloc.state as CurrencyLoaded;
       if (currency == state.globalCurrency) return amount;
       if (state.ratesMap.containsKey(currency)) {
         return amount / state.ratesMap[currency]!;

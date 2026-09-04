@@ -1,21 +1,22 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:scadar/core/cache/models/expense_model.dart';
-import 'package:scadar/core/repository/finance_repository.dart';
-import 'package:scadar/features/home/bloc/finance_event.dart';
-import 'package:scadar/features/home/bloc/finance_state.dart';
-import 'package:scadar/features/home/bloc/currency_cubit.dart';
+import 'package:scadar/core/database/models/expense_model.dart';
+import 'package:scadar/core/repositories/finance_repository.dart';
+import 'package:scadar/features/currency/bloc/currency_bloc.dart';
+import 'package:scadar/features/currency/bloc/currency_state.dart';
+import 'package:scadar/features/finance/bloc/finance_event.dart';
+import 'package:scadar/features/finance/bloc/finance_state.dart';
 
 class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
   final FinanceRepository _financeRepository;
-  final CurrencyCubit _currencyCubit;
+  final CurrencyBloc _currencyBloc;
   late final StreamSubscription<CurrencyState> _currencySubscription;
 
   FinanceBloc({
     required FinanceRepository financeRepository,
-    required CurrencyCubit currencyCubit,
+    required CurrencyBloc currencyBloc,
   })  : _financeRepository = financeRepository,
-        _currencyCubit = currencyCubit,
+        _currencyBloc = currencyBloc,
         super(FinanceInitial()) {
     on<LoadFinanceData>(_onLoadFinanceData);
     on<AddIncomeEvent>(_onAddIncome);
@@ -30,7 +31,7 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
     on<UpdateSubscriptionEvent>(_onUpdateSubscription);
     on<DeleteSubscriptionEvent>(_onDeleteSubscription);
 
-    _currencySubscription = _currencyCubit.stream.listen((state) {
+    _currencySubscription = _currencyBloc.stream.listen((state) {
       if (state is CurrencyLoaded) {
         final now = DateTime.now();
         add(LoadFinanceData(month: now.month, year: now.year));
@@ -72,8 +73,8 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
       String globalCurrency = 'USD';
       Map<String, double> rates = {};
 
-      if (_currencyCubit.state is CurrencyLoaded) {
-        final currencyState = _currencyCubit.state as CurrencyLoaded;
+      if (_currencyBloc.state is CurrencyLoaded) {
+        final currencyState = _currencyBloc.state as CurrencyLoaded;
         globalCurrency = currencyState.globalCurrency;
         rates = currencyState.ratesMap;
       }

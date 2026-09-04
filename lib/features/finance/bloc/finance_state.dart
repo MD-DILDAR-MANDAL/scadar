@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
-import 'package:scadar/core/cache/models/expense_model.dart';
-import 'package:scadar/core/cache/models/income_model.dart';
-import 'package:scadar/core/cache/models/budget_model.dart';
-import 'package:scadar/core/cache/models/recurring_transaction_model.dart';
+import 'package:scadar/core/database/models/expense_model.dart';
+import 'package:scadar/core/database/models/income_model.dart';
+import 'package:scadar/core/database/models/budget_model.dart';
+import 'package:scadar/core/database/models/recurring_transaction_model.dart';
 
 abstract class FinanceState extends Equatable {
   const FinanceState();

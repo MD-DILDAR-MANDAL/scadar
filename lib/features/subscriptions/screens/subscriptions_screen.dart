@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:scadar/core/constant/app_colors.dart';
-import 'package:scadar/features/home/bloc/finance_bloc.dart';
-import 'package:scadar/features/home/bloc/finance_state.dart';
-import 'package:scadar/features/home/bloc/finance_event.dart';
+import 'package:scadar/core/constants/app_colors.dart';
+import 'package:scadar/features/finance/bloc/finance_bloc.dart';
+import 'package:scadar/features/finance/bloc/finance_event.dart';
+import 'package:scadar/features/finance/bloc/finance_state.dart';
 import 'package:scadar/features/subscriptions/widgets/add_subscription_dialog.dart';
 
 class SubscriptionsScreen extends StatelessWidget {

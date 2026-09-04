@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:scadar/core/repository/settings_repository.dart';
+import 'package:scadar/core/repositories/settings_repository.dart';
 import 'package:scadar/core/services/backup_sync_service.dart';
 import 'package:scadar/core/services/google_drive_service.dart';
 import 'package:scadar/features/backup/bloc/backup_event.dart';

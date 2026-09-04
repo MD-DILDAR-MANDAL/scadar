@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:scadar/core/cache/models/income_model.dart';
-import 'package:scadar/core/constant/app_colors.dart';
-import 'package:scadar/core/presentation/widgets/custom_button.dart';
-import 'package:scadar/core/presentation/widgets/custom_dropdown.dart';
-import 'package:scadar/core/presentation/widgets/custom_text_field.dart';
-import 'package:scadar/core/presentation/widgets/custom_card.dart';
-import 'package:scadar/core/presentation/widgets/section_title.dart';
-import 'package:scadar/features/home/bloc/currency_cubit.dart';
-import 'package:scadar/features/home/bloc/finance_bloc.dart';
-import 'package:scadar/features/home/bloc/finance_event.dart';
-import 'package:scadar/features/home/bloc/finance_state.dart';
+import 'package:scadar/core/constants/app_colors.dart';
+import 'package:scadar/core/database/models/income_model.dart';
+import 'package:scadar/core/widgets/custom_button.dart';
+import 'package:scadar/core/widgets/custom_card.dart';
+import 'package:scadar/core/widgets/custom_dropdown.dart';
+import 'package:scadar/core/widgets/custom_text_field.dart';
+import 'package:scadar/core/widgets/section_title.dart';
+import 'package:scadar/features/currency/bloc/currency_bloc.dart';
+import 'package:scadar/features/currency/bloc/currency_event.dart';
+import 'package:scadar/features/currency/bloc/currency_state.dart';
+import 'package:scadar/features/finance/bloc/finance_bloc.dart';
+import 'package:scadar/features/finance/bloc/finance_event.dart';
+import 'package:scadar/features/finance/bloc/finance_state.dart';
 
 class IncomeScreen extends StatefulWidget {
   const IncomeScreen({super.key});
@@ -32,7 +34,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_isInit) {
-      final currencyState = context.read<CurrencyCubit>().state;
+      final currencyState = context.read<CurrencyBloc>().state;
       if (currencyState is CurrencyLoaded) {
         _incomeCurrency = currencyState.globalCurrency;
         _isInit = true;
@@ -70,7 +72,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<CurrencyCubit, CurrencyState>(
+    return BlocListener<CurrencyBloc, CurrencyState>(
       listener: (context, state) {
         if (state is CurrencyLoaded && !_isInit) {
           setState(() {
@@ -230,7 +232,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                     hintText: 'Amount to convert',
                   ),
                   const SizedBox(height: 16),
-                  BlocBuilder<CurrencyCubit, CurrencyState>(
+                  BlocBuilder<CurrencyBloc, CurrencyState>(
                     builder: (context, state) {
                       List<String> items = ['USD', 'EUR', 'GBP', 'INR', 'JPY'];
                       if (state is CurrencyLoaded &&
@@ -292,16 +294,18 @@ class _IncomeScreenState extends State<IncomeScreen> {
                     onPressed: () {
                       final amount =
                           double.tryParse(_convertAmountController.text) ?? 1.0;
-                      context.read<CurrencyCubit>().convert(
-                        amount: amount,
-                        fromCurrency: _fromCurrency,
-                        toCurrency: _toCurrency,
+                      context.read<CurrencyBloc>().add(
+                        ConvertCurrencyEvent(
+                          amount: amount,
+                          fromCurrency: _fromCurrency,
+                          toCurrency: _toCurrency,
+                        ),
                       );
                     },
                     text: 'Convert',
                   ),
                   const SizedBox(height: 16),
-                  BlocBuilder<CurrencyCubit, CurrencyState>(
+                  BlocBuilder<CurrencyBloc, CurrencyState>(
                     builder: (context, state) {
                       if (state is CurrencyLoading) {
                         return const Center(child: CircularProgressIndicator());

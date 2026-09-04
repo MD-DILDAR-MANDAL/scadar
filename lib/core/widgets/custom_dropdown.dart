@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:scadar/core/constant/app_colors.dart';
+import 'package:scadar/core/constants/app_colors.dart';
 
 class CustomDropdown<T> extends StatelessWidget {
   final T value;
