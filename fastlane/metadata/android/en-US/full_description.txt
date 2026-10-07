@@ -1,0 +1,13 @@
+Scadar is an intuitive, completely open-source personal expense and finance tracker designed for privacy and data sovereignty.
+
+Features:
+* Income and expense tracking with custom categories
+* Monthly budgeting with goal tracking and visual progress indicators
+* Recurring transaction management with automatic interval processing
+* Multi-currency support and currency conversion
+* Financial charts and spending analytics
+* 100% offline local storage powered by SQLite
+* Seamless local JSON backup & restore without proprietary cloud dependencies
+* CSV export for spreadsheets
+* Zero ads, zero trackers, and zero telemetry
+

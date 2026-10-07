@@ -1,0 +1,9 @@
+Initial release of Scadar:
+* Expense and income tracking
+* Monthly budgets and categories
+* Recurring transaction scheduler
+* Financial analytics and category breakdown
+* Pure offline SQLite database
+* Local JSON backup and restore
+* CSV data export
+
