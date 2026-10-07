@@ -1,15 +1,11 @@
-import 'package:isar_community/isar.dart';
 import 'package:scadar/core/database/models/expense_model.dart';
-
-part 'recurring_transaction_model.g.dart';
 
 enum RecurrenceInterval { daily, weekly, biWeekly, monthly, yearly }
 
-@collection
 class RecurringTransactionModel {
   RecurringTransactionModel();
 
-  Id id = Isar.autoIncrement;
+  int id = 0;
 
   late double amount;
 
@@ -17,10 +13,12 @@ class RecurringTransactionModel {
 
   String? expenseCategoryName; // Only used if !isIncome.
 
-  @ignore
   ExpenseCategory? get expenseCategory {
     if (expenseCategoryName == null) return null;
-    return ExpenseCategory.values.firstWhere((e) => e.name == expenseCategoryName, orElse: () => ExpenseCategory.other);
+    return ExpenseCategory.values.firstWhere(
+      (e) => e.name == expenseCategoryName,
+      orElse: () => ExpenseCategory.other,
+    );
   }
 
   set expenseCategory(ExpenseCategory? value) {
@@ -31,7 +29,6 @@ class RecurringTransactionModel {
 
   late String currency;
 
-  @enumerated
   late RecurrenceInterval interval;
 
   late DateTime nextExecutionDate;

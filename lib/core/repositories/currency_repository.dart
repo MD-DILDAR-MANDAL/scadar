@@ -1,6 +1,5 @@
 import 'dart:convert';
-import 'package:isar_community/isar.dart';
-import 'package:scadar/core/database/isar_service.dart';
+import 'package:scadar/core/database/database_service.dart';
 import 'package:scadar/core/database/models/exchange_rate_cache_model.dart';
 import 'package:scadar/core/services/currency_converter_service.dart';
 
@@ -16,13 +15,13 @@ abstract class CurrencyRepository {
 
 class CurrencyRepositoryImpl implements CurrencyRepository {
   final CurrencyConverterService _converterService;
-  final IsarService _isarService;
+  final DatabaseService _databaseService;
 
   CurrencyRepositoryImpl({
     required CurrencyConverterService converterService,
-    required IsarService isarService,
+    required DatabaseService databaseService,
   })  : _converterService = converterService,
-        _isarService = isarService;
+        _databaseService = databaseService;
 
   @override
   Future<double> convert({
@@ -44,7 +43,7 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
 
   @override
   Future<Map<String, double>> fetchRatesForBase(String baseCurrency) async {
-    final cached = await _isarService.getExchangeRateCache(baseCurrency);
+    final cached = await _databaseService.getExchangeRateCache(baseCurrency);
     if (cached != null && DateTime.now().difference(cached.lastUpdated).inMinutes < 5) {
       try {
         final Map<String, dynamic> decoded = jsonDecode(cached.ratesJson) as Map<String, dynamic>;
@@ -67,10 +66,10 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
       if (cached != null) {
         cacheModel.id = cached.id;
       } else {
-        cacheModel.id = Isar.autoIncrement;
+        cacheModel.id = 0;
       }
       
-      await _isarService.saveExchangeRateCache(cacheModel);
+      await _databaseService.saveExchangeRateCache(cacheModel);
     } catch (_) {
       // Silently ignore cache save errors
     }

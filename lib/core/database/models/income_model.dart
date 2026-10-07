@@ -1,12 +1,7 @@
-import 'package:isar_community/isar.dart';
-
-part 'income_model.g.dart';
-
-@collection
 class IncomeModel {
   IncomeModel();
 
-  Id id = Isar.autoIncrement;
+  int id = 0;
 
   late double amount;
 

@@ -1,7 +1,3 @@
-import 'package:isar_community/isar.dart';
-
-part 'expense_model.g.dart';
-
 enum ExpenseCategory {
   housing,
   utilities,
@@ -10,18 +6,16 @@ enum ExpenseCategory {
   shopping,
   travel,
   business,
-  other
+  other,
 }
 
-@collection
 class ExpenseModel {
   ExpenseModel();
 
-  Id id = Isar.autoIncrement;
+  int id = 0;
 
   late double amount;
 
-  @enumerated
   late ExpenseCategory category;
 
   late DateTime date;

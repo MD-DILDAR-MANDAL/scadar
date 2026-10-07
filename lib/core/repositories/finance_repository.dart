@@ -1,4 +1,4 @@
-import 'package:scadar/core/database/isar_service.dart';
+import 'package:scadar/core/database/database_service.dart';
 import 'package:scadar/core/database/models/expense_model.dart';
 import 'package:scadar/core/database/models/income_model.dart';
 import 'package:scadar/core/database/models/budget_model.dart';
@@ -22,78 +22,78 @@ abstract class FinanceRepository {
 }
 
 class FinanceRepositoryImpl implements FinanceRepository {
-  final IsarService _isarService;
+  final DatabaseService _databaseService;
 
-  FinanceRepositoryImpl({required IsarService isarService}) : _isarService = isarService;
+  FinanceRepositoryImpl({required DatabaseService databaseService}) : _databaseService = databaseService;
 
   @override
   Future<void> saveIncome(IncomeModel income) async {
-    return _isarService.saveIncome(income);
+    return _databaseService.saveIncome(income);
   }
 
   @override
   Future<void> deleteIncome(int id) async {
-    return _isarService.deleteIncome(id);
+    return _databaseService.deleteIncome(id);
   }
 
   @override
   Future<List<IncomeModel>> getIncomesForMonth(int month, int year) async {
-    return _isarService.getIncomesForMonth(month, year);
+    return _databaseService.getIncomesForMonth(month, year);
   }
 
   @override
   Future<void> saveExpense(ExpenseModel expense) async {
-    return _isarService.saveExpense(expense);
+    return _databaseService.saveExpense(expense);
   }
 
   @override
   Future<void> deleteExpense(int id) async {
-    return _isarService.deleteExpense(id);
+    return _databaseService.deleteExpense(id);
   }
 
   @override
   Future<List<ExpenseModel>> getExpensesForMonth(int month, int year) async {
-    return _isarService.getExpensesForMonth(month, year);
+    return _databaseService.getExpensesForMonth(month, year);
   }
 
   @override
   Future<List<ExpenseModel>> getAllExpenses() async {
-    return _isarService.getAllExpenses();
+    return _databaseService.getAllExpenses();
   }
 
   @override
   Future<void> saveBudget(BudgetModel budget) async {
-    return _isarService.saveBudget(budget);
+    return _databaseService.saveBudget(budget);
   }
 
   @override
   Future<void> deleteBudget(int id) async {
-    return _isarService.deleteBudget(id);
+    return _databaseService.deleteBudget(id);
   }
 
   @override
   Future<List<BudgetModel>> getBudgetsForMonth(int month, int year) async {
-    return _isarService.getBudgetsForMonth(month, year);
+    return _databaseService.getBudgetsForMonth(month, year);
   }
 
   @override
   Future<void> saveRecurringTransaction(RecurringTransactionModel model) async {
-    return _isarService.saveRecurringTransaction(model);
+    return _databaseService.saveRecurringTransaction(model);
   }
 
   @override
   Future<void> deleteRecurringTransaction(int id) async {
-    return _isarService.deleteRecurringTransaction(id);
+    return _databaseService.deleteRecurringTransaction(id);
   }
 
   @override
   Future<List<RecurringTransactionModel>> getAllRecurringTransactions() async {
-    return _isarService.getAllRecurringTransactions();
+    return _databaseService.getAllRecurringTransactions();
   }
 
   @override
   Future<void> processRecurringTransactions() async {
-    final transactions = await _isarService.getAllRecurringTransactions();
+    final transactions = await _databaseService.getAllRecurringTransactions();
     final now = DateTime.now();
 
     for (var tx in transactions) {
@@ -109,7 +109,7 @@ class FinanceRepositoryImpl implements FinanceRepository {
             ..year = tx.nextExecutionDate.year
             ..dateAdded = tx.nextExecutionDate
             ..currency = tx.currency;
-          await _isarService.saveIncome(income);
+          await _databaseService.saveIncome(income);
         } else {
           final expense = ExpenseModel()
             ..amount = tx.amount
@@ -117,7 +117,7 @@ class FinanceRepositoryImpl implements FinanceRepository {
             ..description = tx.description
             ..date = tx.nextExecutionDate
             ..currency = tx.currency;
-          await _isarService.saveExpense(expense);
+          await _databaseService.saveExpense(expense);
         }
 
         switch (tx.interval) {
@@ -152,7 +152,7 @@ class FinanceRepositoryImpl implements FinanceRepository {
       }
 
       if (updated) {
-        await _isarService.saveRecurringTransaction(tx);
+        await _databaseService.saveRecurringTransaction(tx);
       }
     }
   }

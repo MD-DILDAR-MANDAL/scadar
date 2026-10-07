@@ -1,0 +1,41 @@
+Categories:
+  - Money
+  - Office
+License: GPL-3.0-only
+AuthorName: MD DILDAR MANDAL
+SourceCode: https://github.com/MD-DILDAR-MANDAL/scadar
+IssueTracker: https://github.com/MD-DILDAR-MANDAL/scadar/issues
+
+AutoName: Scadar
+
+RepoType: git
+Repo: https://github.com/MD-DILDAR-MANDAL/scadar.git
+
+Builds:
+  - versionName: 1.0.0
+    versionCode: 1
+    commit: 1.0.0
+    output: build/app/outputs/flutter-apk/app-release.apk
+    srclibs:
+      - flutter@stable
+    rm:
+      - ios
+      - linux
+      - macos
+      - web
+      - windows
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - $$flutter$$/bin/flutter config --no-analytics
+      - $$flutter$$/bin/flutter pub get --enforce-lockfile
+    scandelete:
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - $$flutter$$/bin/flutter build apk --release
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 1.0.0
+CurrentVersionCode: 1
+

@@ -1,22 +1,20 @@
-import 'package:isar_community/isar.dart';
 import 'package:scadar/core/database/models/expense_model.dart';
 
-part 'budget_model.g.dart';
-
-@collection
 class BudgetModel {
   BudgetModel();
 
-  Id id = Isar.autoIncrement;
+  int id = 0;
 
   late double limit;
 
-  String? categoryName; // Stored as String because nullable enums as bytes aren't supported
+  String? categoryName;
 
-  @ignore
   ExpenseCategory? get category {
     if (categoryName == null) return null;
-    return ExpenseCategory.values.firstWhere((e) => e.name == categoryName, orElse: () => ExpenseCategory.other);
+    return ExpenseCategory.values.firstWhere(
+      (e) => e.name == categoryName,
+      orElse: () => ExpenseCategory.other,
+    );
   }
 
   set category(ExpenseCategory? value) {

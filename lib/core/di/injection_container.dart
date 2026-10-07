@@ -1,11 +1,10 @@
 import 'package:get_it/get_it.dart';
-import 'package:scadar/core/database/isar_service.dart';
+import 'package:scadar/core/database/database_service.dart';
 import 'package:scadar/core/repositories/currency_repository.dart';
 import 'package:scadar/core/repositories/finance_repository.dart';
 import 'package:scadar/core/repositories/settings_repository.dart';
 import 'package:scadar/core/services/backup_sync_service.dart';
 import 'package:scadar/core/services/currency_converter_service.dart';
-import 'package:scadar/core/services/google_drive_service.dart';
 import 'package:scadar/features/backup/bloc/backup_bloc.dart';
 import 'package:scadar/features/currency/bloc/currency_bloc.dart';
 import 'package:scadar/features/finance/bloc/finance_bloc.dart';
@@ -18,25 +17,23 @@ Future<void> init() async {
   sl.registerLazySingleton<SharedPreferences>(() => prefs);
 
   // Services
-  sl.registerLazySingleton<IsarService>(() => IsarService());
+  sl.registerLazySingleton<DatabaseService>(() => DatabaseService());
   sl.registerLazySingleton<CurrencyConverterService>(() => CurrencyConverterService());
-  sl.registerLazySingleton<GoogleDriveService>(() => GoogleDriveService());
   sl.registerLazySingleton<BackupSyncService>(
     () => BackupSyncService(
-      isarService: sl(),
-      googleDriveService: sl(),
+      databaseService: sl(),
       settingsRepository: sl(),
     ),
   );
 
   // Repositories
   sl.registerLazySingleton<FinanceRepository>(
-    () => FinanceRepositoryImpl(isarService: sl()),
+    () => FinanceRepositoryImpl(databaseService: sl()),
   );
   sl.registerLazySingleton<CurrencyRepository>(
     () => CurrencyRepositoryImpl(
       converterService: sl(),
-      isarService: sl(),
+      databaseService: sl(),
     ),
   );
   sl.registerLazySingleton<SettingsRepository>(
@@ -53,11 +50,10 @@ Future<void> init() async {
     settingsRepository: sl(),
   ));
   sl.registerLazySingleton(() => BackupBloc(
-    googleDriveService: sl(),
     backupSyncService: sl(),
     settingsRepository: sl(),
   ));
 
   // Wait for DB to open to ensure it's ready before the app starts if needed
-  await sl<IsarService>().openDB();
+  await sl<DatabaseService>().openDB();
 }
