@@ -1,6 +1,5 @@
 Categories:
-  - Money
-  - Office
+  - Finance Manager
 License: GPL-3.0-only
 AuthorName: MD DILDAR MANDAL
 SourceCode: https://github.com/MD-DILDAR-MANDAL/scadar
@@ -14,7 +13,7 @@ Repo: https://github.com/MD-DILDAR-MANDAL/scadar.git
 Builds:
   - versionName: 1.0.0
     versionCode: 1
-    commit: v1.0.0
+    commit: b4ab44ec7d5206965c137b6ae3306c0234a62b2c
     output: build/app/outputs/flutter-apk/app-release.apk
     srclibs:
       - flutter@stable
